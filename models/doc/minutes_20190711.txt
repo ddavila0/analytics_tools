@@ -1,0 +1,21 @@
+July 11, 2019 - Talked to Frank:
+
+What to do next:
+    - Document what you've got so far
+    - Change the algorithm's way to calculate recelled:
+        - Nothing gets recalled in the first period (the first N weeks, where N = policy)
+        - Everything after the first period, is counted as recalled
+    - Calculate the 'median' recalled per day (Bytes)
+    - Separate initial dataset in 4 categories:
+        1. NANOAOD
+        2. MINIAOD & MINIAODSIM
+        3. AOD
+        4. Everything else not in (1,2 & 3)
+    - (*)Keep a distribution of recalled per day (Bytes)
+        - Please send Frank the distribution per week, we'll see later if needed per day
+    - Plot per week: (all Bytes)
+        - working_set
+        - recalled
+        - freed
+        
+        

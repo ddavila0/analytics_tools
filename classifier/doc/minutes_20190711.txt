@@ -1,0 +1,16 @@
+Jul 11, 2019
+Kickstart meeting with Ethan
+
+- He can work from now unntil September 23rd (end of summer), 20hrs a week
+- We'll meet weekly on Thursdays at 2:30pm
+
+TODO:
+- Ethan
+    - Figure things out about payment with Frank
+    - Read about decision trees algorithm
+
+- Diego 
+    - Get the dataset of job classAds in/not-in xrootd
+    - make a calendar of tasks to be done
+- 
+
