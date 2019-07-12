@@ -26,7 +26,7 @@ spark = SparkSession(sc)
 # Get information from DBS about datatsets IDs
 csvreader = spark.read.format("com.databricks.spark.csv").option("nullValue","null").option("mode", "FAILFAST")
 dbs_datasets = csvreader.schema(schemas.schema_datasets()).load("/project/awg/cms/CMS_DBS3_PROD_GLOBAL/current/DATASETS/part-m-00000")
-dbs_data_tiers = csvreader.schema(schemas.schema_data_tiers()).load(\"/project/awg/cms/CMS_DBS3_PROD_GLOBAL/current/DATA_TIERS/part-m-00000")
+dbs_data_tiers = csvreader.schema(schemas.schema_data_tiers()).load("/project/awg/cms/CMS_DBS3_PROD_GLOBAL/current/DATA_TIERS/part-m-00000")
 
 schema = types.StructType([
             types.StructField("data", types.StructType([
