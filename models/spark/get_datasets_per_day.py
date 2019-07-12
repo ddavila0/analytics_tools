@@ -12,7 +12,7 @@ year=sys.argv[1]
 month=sys.argv[2]
 
 inputfile="/project/monitoring/archive/condor/raw/metric/"+year+"/"+month+"/*/*.json.gz"
-outputfile="hdfs://analytix/user/ddavila/model/days_"+year+month+".parquet"
+outputfile="hdfs://analytix/user/ddavila/model/data_tier_days_"+year+month+".parquet"
 
 print("===========================================================")
 print("reading: "+inputfile)
@@ -26,6 +26,7 @@ spark = SparkSession(sc)
 # Get information from DBS about datatsets IDs
 csvreader = spark.read.format("com.databricks.spark.csv").option("nullValue","null").option("mode", "FAILFAST")
 dbs_datasets = csvreader.schema(schemas.schema_datasets()).load("/project/awg/cms/CMS_DBS3_PROD_GLOBAL/current/DATASETS/part-m-00000")
+dbs_data_tiers = csvreader.schema(schemas.schema_data_tiers()).load(\"/project/awg/cms/CMS_DBS3_PROD_GLOBAL/current/DATA_TIERS/part-m-00000")
 
 schema = types.StructType([
             types.StructField("data", types.StructType([
@@ -46,7 +47,9 @@ working_set_day = (jobreports
         .withColumn('day_ts', (col('data.RecordTime')-col('data.RecordTime')%fn.lit(86400000))/fn.lit(1000))
         .withColumn('week_ts', (col('data.RecordTime')-col('data.RecordTime')%fn.lit(604800000))/fn.lit(1000))
         .join(dbs_datasets, col('data.DESIRED_CMSDataset')==col('d_dataset'))
-        .groupBy('day_ts', 'week_ts')
+        .join(dbs_data_tiers, col('d_data_tier_id')==col('data_tier_id'))
+        .withColumn('data_tier_class',when(col('tier').isin("MINIAODSIM", "MINIAOD"),0).when(col('tier').isin("NANOAOD"),1).when(col('tier').isin("AOD"),2).otherwise(3))
+        .groupBy('day_ts', 'week_ts', 'data_tier_class')
         .agg(
             fn.collect_set('d_dataset_id').alias('datasets_set'),
         )
