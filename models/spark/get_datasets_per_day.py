@@ -2,7 +2,7 @@
 from __future__ import print_function
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession, Column
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, when
 import pyspark.sql.functions as fn
 import pyspark.sql.types as types
 import schemas
@@ -48,8 +48,8 @@ working_set_day = (jobreports
         .withColumn('week_ts', (col('data.RecordTime')-col('data.RecordTime')%fn.lit(604800000))/fn.lit(1000))
         .join(dbs_datasets, col('data.DESIRED_CMSDataset')==col('d_dataset'))
         .join(dbs_data_tiers, col('d_data_tier_id')==col('data_tier_id'))
-        .withColumn('data_tier_class',when(col('tier').isin("MINIAODSIM", "MINIAOD"),0).when(col('tier').isin("NANOAOD"),1).when(col('tier').isin("AOD"),2).otherwise(3))
-        .groupBy('day_ts', 'week_ts', 'data_tier_class')
+        .withColumn('data_data_tier_name_class',when(col('data_tier_name').isin("MINIAODSIM", "MINIAOD"),0).when(col('data_tier_name').isin("NANOAOD"),1).when(col('data_tier_name').isin("AOD"),2).otherwise(3))
+        .groupBy('day_ts', 'week_ts', 'data_data_tier_name_class')
         .agg(
             fn.collect_set('d_dataset_id').alias('datasets_set'),
         )
