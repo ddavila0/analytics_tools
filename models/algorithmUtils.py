@@ -71,7 +71,10 @@ def get_freed_recalled_and_ws_sizes(weeks_list, policy, datasets_size):
         current_working_set = int_ws.union(new_week)
         current_working_set_size = get_size_of_datasets_set(current_working_set, datasets_size)
         to_free = old_week - (int_ws.union(new_week))
-        to_recall = (new_week - (int_ws.union(old_week))).intersection(freed)
+        # According to minutes from 20190711, everything after the first 'policy' weeks
+        # counts as recalled regardless whether it was freed or not 
+        #to_recall = (new_week - (int_ws.union(old_week))).intersection(freed)
+        to_recall = (new_week - (int_ws.union(old_week)))
        
         working_set_size_per_week.append(current_working_set_size)
         freed.update(to_free)
