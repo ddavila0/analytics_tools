@@ -1,0 +1,4 @@
+__pycache__
+trash/*
+_book
+.ipynb_checkpoints
