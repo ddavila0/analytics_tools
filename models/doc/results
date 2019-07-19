@@ -1,0 +1,15 @@
+July 11, 2019
+First results gathered from Jul 2018 - Jun 2019, All datatiers together:
+
+    policy max_recalled_per_day max_workingset_size total_recalled total_freed
+0   1       2.00 PB              14.75 PB            98.65 PB       142.67 PB 
+1   2       1.28 PB              17.22 PB            66.90 PB       107.88 PB 
+2   3       1.27 PB              18.87 PB            49.06 PB       87.30 PB  
+3   4       1.26 PB              20.07 PB            37.78 PB       74.88 PB  
+4   5       1.19 PB              21.40 PB            30.77 PB       66.29 PB  
+5   6       1.14 PB              23.84 PB            24.38 PB       58.20 PB  
+6   7       1.07 PB              24.66 PB            20.53 PB       53.40 PB  
+7   8       1.07 PB              25.43 PB            17.26 PB       49.79 PB  
+8   9       1.07 PB              26.41 PB            14.96 PB       45.46 PB  
+9   10      1.07 PB              27.20 PB            13.71 PB       43.14 PB  
+10  11      1.07 PB              29.19 PB            11.91 PB       40.75 PB  

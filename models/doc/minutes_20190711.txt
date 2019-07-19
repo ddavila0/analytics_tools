@@ -2,7 +2,7 @@ July 11, 2019 - Talked to Frank:
 
 What to do next:
     - Document what you've got so far
-    - Change the algorithm's way to calculate recelled:
+    - Change the algorithm's way to calculate recalled:
         - Nothing gets recalled in the first period (the first N weeks, where N = policy)
         - Everything after the first period, is counted as recalled
     - Calculate the 'median' recalled per day (Bytes)

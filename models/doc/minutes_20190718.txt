@@ -1,0 +1,8 @@
+Questions for Frank
+
+- A dataset is marked for deletion after N weeks of not being used, but
+    that doesn't mean that is actually deleted exactly after N weeks
+
+- Similarly, what if within 'policy' weeks infinite number of datasets are called?
+
+- Should we assume infinite disk space?
