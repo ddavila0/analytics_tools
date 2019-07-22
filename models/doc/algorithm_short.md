@@ -9,8 +9,8 @@ model e.g. the range (1, 3) will mean that we want to model the following
 deletion policies: "every dataset gets removed after 1,2 and 3 weeks of not
 being used"
 
-The algorithm will perform independent iterations, throught the policy range,
-of the following 3 steps:
+The algorithm will execute independent iterations, throught the policy range
+and perform the following 3 steps at each iteration:
 
 **Step 1**. For each week on **weeks_df**, calculate the *workingset size* and
 the set of datasets *freed* from disk and *recalled* form tape.

@@ -1,11 +1,9 @@
 The algorithm uses 3 DataFrames: **weeks_df**, **days_df** and **dataset_sizes**: 
 
-1) DataFrame **days_df**. In this table, each record will have a week timestamp,
-'week_ts', a day timestamp 'day_ts'and the set of dataset IDs that were accessed
-that day. The DataFrame **weeks_df**
-is the result of grouping the **days_df** by 'week_ts'.
+1) In **days_df** each record will have a week timestamp,
+'week_ts', a day timestamp 'day_ts' and the set of dataset IDs that were accessed
+that day 'datasets_set'. See "The origin of days_df" below for more information on how is this data obtained.
 
-See "The origin of days_df" below for more information on how is this data obtained.
 
 | week_ts    | day_ts     | datasets_set |
 |------------|------------|--------------|
@@ -13,10 +11,12 @@ See "The origin of days_df" below for more information on how is this data obtai
 |1562803200  |1562716800  |{1,5}         |
 |1562198400  |1562112000  |{3}           |
 |1562198400  |1562025600  |{4}           |
+**Note:** This is just an example of how **days_df** looks, it doesn't contain real data
 <br><br>
 
 
-2) DataFrame **weeks_df**. This is the result of grouping the **days_df**
+
+2) **weeks_df** is the result of grouping the **days_df**
 table by 'week_ts' and making a 'union' operation to create a unique set of all
 the datasets read by the group.
 
@@ -24,13 +24,12 @@ the datasets read by the group.
 |------------|--------------|
 |1562803200  |{1,2,5}       |
 |1562198400  |{3,4}         |
+**Note:** This is just an example of how **weeks_df** looks, it doesn't contain real data
 <br><br>
 
 
-3) DataFrame **dataset_sizes**. It contains each of the datasets and its size in
-Byte.
-
-See "The origin of dataset_sizes" below for more details on where this data is
+3) **dataset_sizes** contains each of the datasets and its size in
+Bytes. See "The origin of dataset_sizes" below for more details on where this data is
 coming from.
 
 
@@ -39,6 +38,7 @@ coming from.
 |1             | 100000000    |
 |2             | 150000000    |
 |3             | 1800000      |
+**Note:** This is just an example of how **dataset_sizes** looks, it doesn't contain real data
 <br><br>
 
 
@@ -74,12 +74,10 @@ working_set_day = (jobreports
     )
 ```
 
-The first part filters out job records that are not interesting for us. In this
-study, we are only focusing on "analysis" jobs coming form CRAB that are "Completed"
-and have "JobUniverse" 5.There are certain utility CRAB jobs with JobUniverse 12 
-that we want to filter out.
-
-Also we are only interested in those jobs which read a dataset so that they must
+The first part filters out job records that are not interesting for this
+study. We are only focusing on "analysis" jobs coming form CRAB that are "Completed"
+and have "JobUniverse" 5 (there are certain utility CRAB jobs with JobUniverse 12
+that we want to filter out). Also we are only interested in those jobs which read a dataset so that they must
 have a not null value on the filed 'DESIRED_CMSDataset'. 
 
 ```
@@ -95,7 +93,7 @@ The second part adds two aditional columns to the table:
 
 This two aditional columns are created from the column 'RecordTime' which is the
 job's completion timestamp in miliseconds. These new columns would be used later
-on to group all jobs wich completed on the same week or the same day
+on to group all jobs wich were completed on the same week and/or the same day
 
 
 ```
@@ -160,7 +158,7 @@ datasets = (dbs_blocks
 
 We use two tables from the DBS database: dbs_blocks and dbs_datasets. Given that
 the dbs_datasets table doesn't contain the size of each dataset, we need to get
-this date from the dbs_blocks table which has the information about the size of
+this data from the dbs_blocks table which has the information about the size of
 each block and the dataset it belongs to, this way we can sum up the size of all 
 the blocks that belong to a dataset to get the size of a dataset.
 

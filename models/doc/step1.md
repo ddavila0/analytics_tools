@@ -4,7 +4,7 @@ At this step the algorithm will receive a specific deletion policy
 and will iterate through the list of weeks in
 **weeks_df** on chunks on N weeks, where N=policy.
 
-It will start at the (N)est week and move forward one week at a time. Then it
+It will start at the (N)est week and move forward one week at a time. For each week it
 will calculate 3 intermediate datasets: *old_week*, *new-week* and *int_ws* 
 that will help us to calculate: *current_working_set*, *to_recall* and *to_free*.
 Using *current_working_set* and the DataFrame **datasets_size** it will calculate
@@ -21,8 +21,8 @@ are they calculated.
 ## new_week, old week, int_ws
 
 Given that we are looking at a week (i) from **weeks_df** and that the policy = N
- * **new_week**. would be the set of datasets accessed within the week  i  
- * **old_week**. would be the set of datasets accessed within the week N weeks before i
+ * **new_week**. would be the set of datasets accessed within the week (i)
+ * **old_week**. would be the set of datasets accessed within the week (i-N)
  * **int_ws**(intermediate workingset). would be the set of datasets accessed in
     all the weeks between **old_week** and **new_week** (not including either of them)
 
@@ -33,17 +33,17 @@ int_ws:
 for j in range(i-N+1, i-1):
     int_ws= int_ws.union(weeks[j]
 ```
-Once we have new_week, old_week and int_ws, we procees to calculate the
+Once we have new_week, old_week and int_ws, we proceed to calculate the
 *current_working_set*, the *to_recall* and *to_free*.
 
 
 ## current_working_set, to_recall, to_free 
 
 Given that we have a  week (i) from **weeks_df** and that the policy = N
- * **working_set** is the set of datsets kept in disk at the end of the week i
- * **to_recall** is the set of datasets that were recalled during the week i
+ * **working_set** is the set of datsets kept in disk at the end of the week (i)
+ * **to_recall** is the set of datasets that were recalled during the week (i)
  * **to_free** is the set of datasets that will be removed from disk, given that they
-    haven't been used in the last N weeks
+    haven't been used in the last (N) weeks
 
 ```
 current_working_set = int_ws.union(new_week)
@@ -70,16 +70,18 @@ On this step (Step 1), we will calculate the amount of Bytes only for the
 will be done at Step 3.
 
 Using the **datasets_size** we will calculate the amount of Bytes in the current
-working set.
+working set by suming up the size of each dataset in **current_working_set*.
 
 ```
 current_working_set_size = get_size_of_datasets_set(current_working_set, datasets_size) 
 ```
+At this point we can forget of **current_working_set**, since it is not used in
+in the next steps.
+
 
 ## The lists
 
-At this point we can forget of **current_working_set**, since it is not used in
-in the next steps. Then up until now we have, for a given week (i),: 
+By the end of a week iteration we will have 3 sets:
 
  * current_working_set_size
  * to_recall
@@ -89,13 +91,13 @@ Given that we are interested in keeping the above sets for each of the weeks in
 **weeks_df**, we will create a list for each of these sets and append a new set
 for every week as we iterate through **weeks_df**
 
-At the end of the Step 1 we will have produced 3 lists:
+At the end of all the week iterations we will have produced 3 lists:
  * working_set_size_per_week
  * recalled_per_week
  * freed_per_week
 
-Each of these list have as many items as weeks on **weeks_df** and together they
-represent the status of disk usage(in Bytes), the set of datasets recalled from
+Each of these list will have as many items as weeks on **weeks_df** and together they
+will represent the status of disk usage(in Bytes), the set of datasets recalled from
 tape and the datasets removed from disk at each week for a given delete policy.
 
 
