@@ -16,7 +16,7 @@ recalled_per_week = [{1,2,5},{4}]
 ```
 
 So first of all we see that our study is only looking at the data of 2 weeks.
-Then, we know that in the first week the dataset recalled are: 1 and 5
+Then, we know that in the first week the dataset recalled are: 1,2 and 5
 whereas in the second week only the dataset 4 was recalled.
 
 If we look at the **day_df** below, we can see as well that there are
