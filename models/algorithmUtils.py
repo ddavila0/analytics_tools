@@ -1,3 +1,72 @@
+import pandas as pd
+import glob
+
+###############################################################################
+#                               READ INPUT DATA
+###############################################################################
+# Takes a list of dataframes (one per month) and merge them into 
+# a single dataframe making sure that records with the same week timestamp(week_ts)
+# and day timestamp(day_ts) present in more than one month are merged together
+def merge_days_dataframes(days_df_list):
+    # Data is coming separated in months, let's concatenate all these months
+    # to make a single DataFrame containing all the data
+    all_days = pd.concat(days_df_list)
+    all_days.reset_index(inplace=True)
+    
+    # Transform 'datasets_set' from array to list, so that we can group lists
+    all_days['datasets_set']=all_days['datasets_set'].apply(list)
+    
+    # Make sure that the same week_ts + day_ts doesn't exist in more than 1 month
+    # and if so, group it together
+    all_days= all_days.groupby(['week_ts','day_ts']).agg({'datasets_set':sum})
+    all_days.reset_index(inplace=True)
+    
+    return all_days
+
+# group day records into weeks, making a union on the datasets sets
+def group_days_into_weeks_df(all_days):
+    # Create a new DataFrame 'all_weeks' where we group all days, within a week, together
+    all_weeks = all_days.groupby(['week_ts']).agg({'datasets_set':sum})
+
+    # Transform the 'datasets_set' from list to set, to remove duplicates
+    all_weeks['datasets_set']=all_weeks['datasets_set'].apply(set)
+    all_weeks.reset_index(inplace=True)
+    
+    # Transform the 'datasets_set' from list to set, to remove duplicates
+    all_days['datasets_set']=all_days['datasets_set'].apply(set)
+    all_days.reset_index(inplace=True)
+    
+    return all_weeks
+
+
+# Receives 2 paths:
+# @days_paths: from where to read input files of days datasets and 
+# @datasets_path: where is the file that contains the datasets sizes 
+# returns 3 DataFrames:
+# 1. all_days: each record contains the set of datsets accessed in a given day 
+# 2. all_weeks: each record contains the set of datsets accessed in a given day week
+# 3. datasets_size: each record contains a dataset ID and its size on Bytes
+def get_input_data(days_path, datasets_path):
+    datasets_df = pd.read_parquet(datasets_path)
+    datasets_size = datasets_df[['d_dataset_id', 'dataset_size']]
+    
+    days_df_list = [] 
+    list_of_files = glob.glob(days_path)
+    for file in list_of_files:
+        print("Reading: "+file)
+        day_df = pd.read_parquet(file)
+        days_df_list.append(day_df)
+        
+    all_days = merge_days_dataframes(days_df_list)
+    all_weeks = group_days_into_weeks_df(all_days)
+    
+    return all_days, all_weeks, datasets_size
+            
+
+###############################################################################
+
+
+
 # Receives a weeks DataFrame ('weeks_df') and returns a sorted (by week_ts) list
 # of datasets sets
 # @weeks_ds: a pandas DataFrame of the form:
@@ -30,6 +99,9 @@ def get_sorted_list_of_datasets_sets(weeks_df):
         
     return weeks_sorted_list
 
+###############################################################################
+#                       MAIN ALGORITHM
+###############################################################################
 def get_freed_recalled_and_ws_sizes(weeks_list, policy, datasets_size):
     freed = set()
     recalled_per_week = []
@@ -83,6 +155,8 @@ def get_freed_recalled_and_ws_sizes(weeks_list, policy, datasets_size):
 
     return freed_per_week, recalled_per_week, working_set_size_per_week
 
+
+###############################################################################
 
 # Get the set of datasets recalled in every day of a given week
 def get_datasets_recalled_per_day(recalled_set, week_ts, days_df):

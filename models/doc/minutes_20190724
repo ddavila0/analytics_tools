@@ -1,0 +1,50 @@
+working set always increasing
+
+Accesses to newly announced datasets should not count as recalled
+
+We need a way to distinguish accesses to newly created datasets
+    - Is there a date in DBS that tell us that?
+        - Not all the datasets are created the same
+        - Some are let open for a while
+        - Simulation get open and close faster than detector data
+        - 
+    - What is the common deltaT between announced date (or any other similar date)
+        and first access to the dataset
+
+
+ * Look for the meaning of the different dates in DBS (DAS?)
+ 1. Get a table with:
+    |Dataset Id |d_creation_date|d_last_modification_date|
+    
+    ? should we round the dates to a day?
+
+    ? What about the creation/last_modification date of the newes block/file
+
+ 2. Create a table that shows the first access to every dataset
+    |Datset Id |First access|
+
+     * Remove any dataset that was created very close to the init time
+        of our data (June 2018)
+
+    * For each day in day_df:
+        for each dataset in day_df[day].datasets_set
+            if dict_first_access[dataset] == NULL:
+                dict_first_access[datastet] = day
+            # If not null, then it already have a date set
+            # which has to be older than day, given that 
+            # we are going through the days cronologically
+   
+ 3. Create a deltas table 
+    - Augment table from (1) with a column of the date of first access from (2)
+    - Add 2 new columns:
+        1. delta_creation_date      = first_access_date - d_creation_date 
+        2. delta_modification_date  = first_access_date - d_modification_date
+
+ 4 Modify the Algorithm such that recalled gets divided in 2 categories:
+    1. Really recalled
+    2. Newly accessed. When the day of the acccess(i) is <= creation_date+ threshold + policy
+        dataset creation 
+
+5. Modify the algorithm such that to_free includes the newly_created datasets
+        to_free = old_week + newly_created[old_week]  - 
+            (int_ws + newly_created[int_ws] + new_week + newly_create[new_week]

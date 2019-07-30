@@ -8,3 +8,5 @@
     * [MINI](results_mini.md)
     * [ADO](results_ado.md)
     * [REST](results_rest.md)
+ * [Algorithm v2.0](algorithm_short_v2.0.md)
+    * [DeltaT](deltaT.md)

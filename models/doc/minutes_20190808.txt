@@ -1,0 +1,6 @@
+What is  a newly accessed dataset?
+    - a datset that is accessed for first time? OR
+    - a dataset that is accessed for first time and near to its creation date?
+        - what is near?
+        - possitive and negative near?
+   
