@@ -2,7 +2,7 @@ The algorithm uses 3 DataFrames: **weeks_df**, **days_df** and **dataset_sizes**
 
 1) In **days_df** each record will have a week timestamp,
 'week_ts', a day timestamp 'day_ts' and the set of dataset IDs that were accessed
-that day 'datasets_set'. See "The origin of days_df" below for more information on how is this data obtained.
+that day 'datasets_set'. See [The origin of days DataFrame](#the-origin-of-days-dataframe) below for more information on how is this data obtained.
 
 
 | week_ts    | day_ts     | datasets_set |
@@ -29,7 +29,7 @@ the datasets read by the group.
 
 
 3) **dataset_sizes** contains each of the datasets and its size in
-Bytes. See "The origin of dataset_sizes" below for more details on where this data is
+Bytes. See [The origin of dataset sizes DataFrame](#the-origin-of-dataset-sizes-dataframe) below for more details on where this data is
 coming from.
 
 
@@ -42,7 +42,7 @@ coming from.
 <br><br>
 
 
-## The origin of days_df
+## The origin of _days_ DataFrame
 
 These data is obtained from HDFS using the spark cluster at CERN. The spark code
 can be found here:
@@ -138,7 +138,7 @@ of jobs are put together in a set called 'datasets_set'. We keep the week timest
  )
 ```
 
-## The origin of dataset_sizes
+## The origin of _dataset sizes_ DataFrame
 
 These data is obtained from HDFS using the spark cluster at CERN. The spark code
 can be found here:
