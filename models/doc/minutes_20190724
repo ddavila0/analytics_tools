@@ -48,3 +48,11 @@ We need a way to distinguish accesses to newly created datasets
 5. Modify the algorithm such that to_free includes the newly_created datasets
         to_free = old_week + newly_created[old_week]  - 
             (int_ws + newly_created[int_ws] + new_week + newly_create[new_week]
+
+6. Modify the algorithm such that the workingset is diveded into 2:
+    1. working set of things that have been read (newly created or not)
+    2. working set of things that are in disk becasue they are new but haven't been read
+  Plotting the 2 categories above as a stack, should give us the same result as in the
+  the previous verison of the algorithm
+
+    

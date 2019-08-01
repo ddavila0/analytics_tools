@@ -102,16 +102,19 @@ def get_sorted_list_of_datasets_sets(weeks_df):
 ###############################################################################
 #                       MAIN ALGORITHM
 ###############################################################################
-def get_freed_recalled_and_ws_sizes(weeks_list, policy, datasets_size):
+def get_freed_recalled_and_ws_sizes(weeks_list, weeks_first_access_list, policy, datasets_size):
     freed = set()
-    recalled_per_week = []
     freed_per_week = []
     called_per_week = []
     working_set_size_per_week=[]
     ws_per_week = []
     to_free = set()
     to_recall = set()
-    
+    newly_called = set()
+    really_recalled = set()
+    really_recalled_per_week = []
+    newly_called_per_week = []
+ 
     # Fill in the first 'policy' weeks with empty sets given that nothing could have
     # recalled nor freed during those weeks.
     # The working set size for these first 'policy' weeks will be accumulated set of
@@ -134,9 +137,15 @@ def get_freed_recalled_and_ws_sizes(weeks_list, policy, datasets_size):
         int_ws = set()
         int_ws_to = i - 1
         int_ws_from = i - (policy) + 1
+        
+        # Get the set of datasets that have been accessed for first time in the
+        # N weeks prior to the current week which is pointed by (i)
+        for j in range(i-policy-deltaT, i):
+            newly_created.update(weeks_first_access_list[j])
  
         for j in range(int_ws_from, int_ws_to+1):
             int_ws.update(weeks_list[j])
+
         new_week = weeks_list[i]
         old_week = weeks_list[int_ws_from -1]
         
@@ -147,10 +156,17 @@ def get_freed_recalled_and_ws_sizes(weeks_list, policy, datasets_size):
         # counts as recalled regardless whether it was freed or not 
         #to_recall = (new_week - (int_ws.union(old_week))).intersection(freed)
         to_recall = (new_week - (int_ws.union(old_week)))
-       
+        for dataset in to_recall:
+            if dataset in newly_created:
+                newly_called.update(dataset)
+            else:
+                really_recalled.update(dataset)
+        
         working_set_size_per_week.append(current_working_set_size)
         freed.update(to_free)
-        recalled_per_week.append(to_recall)
+        #recalled_per_week.append(to_recall)
+        really_recalled_per_week.append(really_recalled)
+        newly_called_per_week.append(newly_called)
         freed_per_week.append(to_free)
 
     return freed_per_week, recalled_per_week, working_set_size_per_week
