@@ -1,0 +1,16 @@
+Aug 1st, 2019
+
+What is  a newly accessed dataset?
+    - a datset that is accessed for first time? OR
+    - a dataset that is accessed for first time and near to its creation date?
+        - what is near?
+        - possitive and negative near?
+-----------------------------------------------------------------------------------
+-> Datasets that are older than the date when we start looking at the data get dropped
+-> Frank asked to build two histograms for MINI only for the first 50 and 100 days with
+    the bins fixed to 50 and 100 respectively (1 bin per day)
+
+-> Based on that and the original deltaT histograms We decided to set deltaT
+    to 7 and 14 weeks
+
+   

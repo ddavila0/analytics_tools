@@ -2,7 +2,7 @@ import pandas as pd
 import glob
 
 ###############################################################################
-#                               READ INPUT DATA
+#                               READ  DATA
 ###############################################################################
 # Takes a list of dataframes (one per month) and merge them into 
 # a single dataframe making sure that records with the same week timestamp(week_ts)
@@ -39,16 +39,19 @@ def group_days_into_weeks_df(all_days):
     return all_weeks
 
 
-# Receives 2 paths:
-# @days_paths: from where to read input files of days datasets and 
+# Receives 3 paths:
+# @days_paths: from where to read input files of days datasets
+# @datasets_creation_path: where is the file that contains the datasets creation date 
 # @datasets_path: where is the file that contains the datasets sizes 
 # returns 3 DataFrames:
 # 1. all_days: each record contains the set of datsets accessed in a given day 
-# 2. all_weeks: each record contains the set of datsets accessed in a given day week
-# 3. datasets_size: each record contains a dataset ID and its size on Bytes
-def get_input_data(days_path, datasets_path):
+# 2. all_weeks_access: each record contains the set of datsets accessed in a given day week
+# 3. all_weeks_creation: each record contains the set of datsets created in a given day week
+# 4. datasets_size: each record contains a dataset ID and its size on Bytes
+def get_input_data(days_path, datasets_creation_path, datasets_path):
     datasets_df = pd.read_parquet(datasets_path)
     datasets_size = datasets_df[['d_dataset_id', 'dataset_size']]
+    datasets_creation_df = pd.read_parquet(datasets_creation_path)
     
     days_df_list = [] 
     list_of_files = glob.glob(days_path)
@@ -58,16 +61,34 @@ def get_input_data(days_path, datasets_path):
         days_df_list.append(day_df)
         
     all_days = merge_days_dataframes(days_df_list)
-    all_weeks = group_days_into_weeks_df(all_days)
-    
-    return all_days, all_weeks, datasets_size
+    all_weeks_access = group_days_into_weeks_df(all_days)
+    all_weeks_creation = datasets_creation_df.groupby(['creation_week_ts']).agg({'d_dataset_id':list})
+    all_weeks_creation.reset_index(inplace=True)
+
+    return all_days, all_weeks_access, all_weeks_creation, datasets_size
+
+def get_input_data_old(days_path, datasets_path):
+    datasets_df = pd.read_parquet(datasets_path)
+    datasets_size = datasets_df[['d_dataset_id', 'dataset_size']]
+   
+    days_df_list = [] 
+    list_of_files = glob.glob(days_path)
+    for file in list_of_files:
+        print("Reading: "+file)
+        day_df = pd.read_parquet(file)
+        days_df_list.append(day_df)
+        
+    all_days = merge_days_dataframes(days_df_list)
+    all_weeks_access = group_days_into_weeks_df(all_days)
+   
+    return all_days, all_weeks_access, datasets_size
             
 
 ###############################################################################
 
 
 
-# Receives a weeks DataFrame ('weeks_df') and returns a sorted (by week_ts) list
+# Receives a weeks DataFrame ('weeks_df') and returns a sorted (by 'sortby') list
 # of datasets sets
 # @weeks_ds: a pandas DataFrame of the form:
 #    ------------------------------------------------
@@ -80,96 +101,141 @@ def get_input_data(days_path, datasets_path):
 #    where:
 #     'weeks_ts' is a Linux timestamp that identifies the week and 
 #     'datasets_set' is an array of datasets IDs that were accessed in that week
-#    @return: [{15686513, 16766504},{12686513, 13766504, 14689984},{17686513, 18766504, 13689984}] 
+# @week_ts: the name of the field in @week_ds that identifies the week timestamp
+#    and that will be used to sort the data. In the example above it would be "weeks_ts"
+# @datasets_set: the name of the field in @week_ds that identifies the dataset list. In the
+#   example above it would be "datasets_set"
+# @init: the timestamp of the first week on the time fram being analyzed 
+# @end: the timestamp of the last week on the time fram being analyzed
+# @return: [{15686513, 16766504},{12686513, 13766504, 14689984},{17686513, 18766504, 13689984}] 
 #
-def get_sorted_list_of_datasets_sets(weeks_df):
-    # Sort the dataset in cronological order (by week_ts (week timestamp))
-    # Reset the index once the dataFrame is sorted so that we can access it
-    # in order using the indices
-    weeks_df_sorted = weeks_df.sort_values('week_ts')
-    weeks_df_sorted = weeks_df_sorted.reset_index(drop=True)
-
-    # count() returns a series structure, get an integer 
-    weeks_df_count = weeks_df_sorted.count()
-    weeks_df_count = weeks_df_count.week_ts
-    # Create a cronological ordered list of datasets sets(arrays are converted into sets)
-    weeks_sorted_list= []
-    for i in range(0, weeks_df_count):
-        weeks_sorted_list.append(set(weeks_df_sorted.datasets_set[i]))
+def get_sorted_list_of_datasets_setsX(weeks_df, week_ts, datasets_set, init, end):
+    seconds_in_a_week=3600*24*7
+    weeks_sorted_list = []
+    # Sort the dataset in cronological order using @week_ts (week timestamp)
+    weeks_df_sorted = weeks_df.sort_values(week_ts)
+    #print(weeks_df_sorted.head(5))
+    # Once sorted, create a list with the sets of datasets
+    # this list has to be as long as weeks are in the time frame we are looking at
+    # in case there is an empty week we will append an empty set on the list
+    i = init
+    for week_timestamp, dataset_list in weeks_df_sorted.values:
         
-    return weeks_sorted_list
+        # Drop any week outside the time frame we are analyzing
+        if week_timestamp < init or week_timestamp > end:
+            #print("dropping week: "+str(week_timestamp))
+            continue
+        
+        if week_timestamp != i:
+            # There is 1 or more weeks where no activity was registered
+            # let's put an empty set on each of them
+            for j in range(0, int((week_timestamp - i)/seconds_in_a_week) ):
+                print("week: "+str(i)+"is missing)")
+                weeks_sorted_list.append(set())
+                i+=seconds_in_a_week
+        weeks_sorted_list.append(set(dataset_list))
+        last = week_timestamp
+        i+=seconds_in_a_week
 
+    # If there were some weeks with no activity at the end, fill the list
+    # with empty sets
+    for j in range(0, int((end - i)/seconds_in_a_week)+1):
+                print("week: "+str(i)+"is missing at last)")
+                weeks_sorted_list.append(set())
+                i+=seconds_in_a_week
+
+    return weeks_sorted_list
 ###############################################################################
 #                       MAIN ALGORITHM
 ###############################################################################
-def get_freed_recalled_and_ws_sizes(weeks_list, weeks_first_access_list, policy, datasets_size):
-    freed = set()
-    freed_per_week = []
-    called_per_week = []
-    working_set_size_per_week=[]
-    ws_per_week = []
-    to_free = set()
-    to_recall = set()
-    newly_called = set()
-    really_recalled = set()
-    really_recalled_per_week = []
-    newly_called_per_week = []
- 
-    # Fill in the first 'policy' weeks with empty sets given that nothing could have
-    # recalled nor freed during those weeks.
-    # The working set size for these first 'policy' weeks will be accumulated set of
-    # datasets accessed during those weeks
-    current_working_set = set()
-    current_working_set_size = 0
-    for i in range(0, policy):
-        recalled_per_week.append(to_recall)
-        freed_per_week.append(to_free)
-        current_working_set = current_working_set.union(weeks_list[i])
-        current_working_set_size = get_size_of_datasets_set(current_working_set, datasets_size)
-        working_set_size_per_week.append(current_working_set_size)
+def get_freed_recalled_and_ws_sizes(weeks_list_accessed, weeks_list_created, policy, deltaT, datasets_size):
+    
+    working_set_size_accessed_per_week =[]
+    working_set_size_created_per_week =[]
+    recalled_accessed_per_week = []
+    recalled_created_per_week = []
+    freed_accessed_per_week = []
+    freed_created_per_week = []
+
+    current_working_set_accessed = set()
+    current_working_set_created = set()
+
+    to_free_created = set()
+    to_free_accessed = set()
+    to_recall_accessed = set()
+    
+
+    # For the first deltaT weeks we would assume nothing happened, just the working set both
+    # for created and accessed is initialized
+    for i in range(0, deltaT):
+        recalled_created_per_week.append(set())
+        recalled_accessed_per_week.append(set())
+        freed_per_week.append(set())
+
+        current_working_set_created = current_working_set_created.union(weeks_list_created[i])
+       
+        # The accessed working set gets initialized only with the datasets accessed in the last
+        # N weeks, where N = policy
+        if i >= deltaT - policy:
+            current_working_set_accessed = current_working_set_accessed .union(weeks_list_accessed[i])
+            curr_ws_size  = get_size_of_datasets_set(current_working_set_accessed, datasets_size)
+            working_set_size_accessed_per_week.append(curr_ws_size )
+            # A dataset that is in the accessed working set cannot be at the same time in the created one
+            current_working_set_created = current_working_set_created - current_working_set_accessed
+        else:
+            working_set_size_accessed_per_week.append(0)
+        
+        curr_ws_size = get_size_of_datasets_set(current_working_set_created, datasets_size)
+        working_set_size_created_per_week.append(curr_ws_size)
    
+    #return freed_created_per_week, freed_accessed_per_week, recalled_accessed_per_week, working_set_size_created_per_week, working_set_size_accessed_per_week
     # For each week in the list, starting on the first week
-    # after the policy
-    for i in range(policy, len(weeks_list)):
+    # after deltaT
+    for i in range(deltaT, len(weeks_list_accessed)):
         # Calculate the intermediate working_set that includes the set of datasets
         # accesed between the week leaving the working set(old_week) and the
         # the current week(new_week)
-        int_ws = set()
-        int_ws_to = i - 1
-        int_ws_from = i - (policy) + 1
+        int_ws_created = set()
+        int_ws_created_from = i - (deltaT) + 1
+        
+        int_ws_accessed = set()
+        int_ws_accessed_from = i - (policy) + 1
         
         # Get the set of datasets that have been accessed for first time in the
         # N weeks prior to the current week which is pointed by (i)
-        for j in range(i-policy-deltaT, i):
-            newly_created.update(weeks_first_access_list[j])
+        for j in range(int_ws_created_from, i):
+            int_ws_created.update(weeks_list_created[j])
  
-        for j in range(int_ws_from, int_ws_to+1):
-            int_ws.update(weeks_list[j])
+        for j in range(int_ws_accessed_from, i):
+            int_ws_accessed.update(weeks_list_accessed[j])
 
-        new_week = weeks_list[i]
-        old_week = weeks_list[int_ws_from -1]
+        new_week_created  = weeks_list_created[i]
+        new_week_accessed = weeks_list_accessed[i]
+        old_week_created  = weeks_list_created[int_ws_created_from -1]
+        old_week_accessed = weeks_list_accessed[int_ws_accessed_from -1]
         
-        current_working_set = int_ws.union(new_week)
-        current_working_set_size = get_size_of_datasets_set(current_working_set, datasets_size)
-        to_free = old_week - (int_ws.union(new_week))
-        # According to minutes from 20190711, everything after the first 'policy' weeks
-        # counts as recalled regardless whether it was freed or not 
-        #to_recall = (new_week - (int_ws.union(old_week))).intersection(freed)
-        to_recall = (new_week - (int_ws.union(old_week)))
-        for dataset in to_recall:
-            if dataset in newly_created:
-                newly_called.update(dataset)
-            else:
-                really_recalled.update(dataset)
+        current_working_set_created = int_ws_created.union(new_week_created)
         
-        working_set_size_per_week.append(current_working_set_size)
-        freed.update(to_free)
-        #recalled_per_week.append(to_recall)
-        really_recalled_per_week.append(really_recalled)
-        newly_called_per_week.append(newly_called)
-        freed_per_week.append(to_free)
+        current_working_set_accessed = int_ws_accessed.union(new_week_accessed)
+        curr_ws_size  = get_size_of_datasets_set(current_working_set_accessed, datasets_size)
+        working_set_size_accessed_per_week.append(curr_ws_size )
+        
+        # A dataset that is in the accessed working set cannot be at the same time in the created one
+        current_working_set_created = current_working_set_created - current_working_set_accessed
+        curr_ws_size = get_size_of_datasets_set(current_working_set_created, datasets_size)
+        working_set_size_created_per_week.append(curr_ws_size)
 
-    return freed_per_week, recalled_per_week, working_set_size_per_week
+        
+        to_free_created    = old_week_created - current_working_set_accessed
+        #to_recall_accessed = new_week_accessed - int_ws_accessed.union(old_week_accessed) - current_working_set_created
+        to_recall_accessed = new_week_accessed - int_ws_accessed.union(old_week_accessed) - (int_ws_created.union(old_week_created))
+        to_free_accessed   = old_week_accessed - current_working_set_accessed - current_working_set_created       
+        
+        freed_per_week.append(to_free_created.union(to_free_accessed))
+        recalled_accessed_per_week.append(to_recall_accessed)
+        
+
+    return freed_per_week, recalled_accessed_per_week, working_set_size_created_per_week, working_set_size_accessed_per_week
 
 
 ###############################################################################

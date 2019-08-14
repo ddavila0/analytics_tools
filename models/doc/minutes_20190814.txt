@@ -1,0 +1,11 @@
+Aug 14th, 2019
+
+- Reconsider delta + policy
+
+- A dataset cannot be at the same time in both the working set of accessed and
+    the working set of created, right?
+
+- We should consider looking few weeks forward to do not count an early access
+    to a newly created dataset as recalled when the access appears before the
+    creation of the dataset
+    How much is few?
