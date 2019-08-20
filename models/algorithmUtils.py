@@ -154,8 +154,7 @@ def get_freed_recalled_and_ws_sizes(weeks_list_accessed, weeks_list_created, pol
     working_set_size_created_per_week =[]
     recalled_accessed_per_week = []
     recalled_created_per_week = []
-    freed_accessed_per_week = []
-    freed_created_per_week = []
+    freed_per_week = []
 
     current_working_set_accessed = set()
     current_working_set_created = set()

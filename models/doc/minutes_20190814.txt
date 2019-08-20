@@ -1,6 +1,7 @@
 Aug 14th, 2019
 
 - Reconsider delta + policy
+DeltaT = Max(Policy, 7 | 14)
 
 - A dataset cannot be at the same time in both the working set of accessed and
     the working set of created, right?
