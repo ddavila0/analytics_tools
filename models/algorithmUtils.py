@@ -150,6 +150,10 @@ def get_sorted_list_of_datasets_setsX(weeks_df, week_ts, datasets_set, init, end
 ###############################################################################
 def get_freed_recalled_and_ws_sizes(weeks_list_accessed, weeks_list_created, policy, deltaT, datasets_size):
     
+    # For debug only, remove!
+    #working_set_accessed_per_week =[]
+    #working_set_created_per_week =[]
+    
     working_set_size_accessed_per_week =[]
     working_set_size_created_per_week =[]
     recalled_accessed_per_week = []
@@ -166,31 +170,44 @@ def get_freed_recalled_and_ws_sizes(weeks_list_accessed, weeks_list_created, pol
 
     # For the first deltaT weeks we would assume nothing happened, just the working set both
     # for created and accessed is initialized
-    for i in range(0, deltaT):
+    if deltaT > policy:
+        init_date_created = 0
+        init_date_policy = deltaT - policy
+    else:
+        init_date_created = policy - deltaT
+        init_date_policy = 0
+
+    for i in range(0, max(deltaT, policy)):
         recalled_created_per_week.append(set())
         recalled_accessed_per_week.append(set())
         freed_per_week.append(set())
 
-        current_working_set_created = current_working_set_created.union(weeks_list_created[i])
+        if i>= init_date_created:
+            current_working_set_created = current_working_set_created.union(weeks_list_created[i])
        
-        # The accessed working set gets initialized only with the datasets accessed in the last
-        # N weeks, where N = policy
-        if i >= deltaT - policy:
+        if i >= init_date_policy:
             current_working_set_accessed = current_working_set_accessed .union(weeks_list_accessed[i])
             curr_ws_size  = get_size_of_datasets_set(current_working_set_accessed, datasets_size)
             working_set_size_accessed_per_week.append(curr_ws_size )
+            #d
+            #working_set_accessed_per_week.append(current_working_set_accessed)
             # A dataset that is in the accessed working set cannot be at the same time in the created one
             current_working_set_created = current_working_set_created - current_working_set_accessed
         else:
             working_set_size_accessed_per_week.append(0)
+            #d
+            #working_set_accessed_per_week.append(set())
         
         curr_ws_size = get_size_of_datasets_set(current_working_set_created, datasets_size)
         working_set_size_created_per_week.append(curr_ws_size)
+        #d
+        #working_set_created_per_week.append(current_working_set_created)
    
+    #return working_set_accessed_per_week, working_set_created_per_week, freed_per_week, recalled_accessed_per_week, working_set_size_created_per_week, working_set_size_accessed_per_week
     #return freed_created_per_week, freed_accessed_per_week, recalled_accessed_per_week, working_set_size_created_per_week, working_set_size_accessed_per_week
     # For each week in the list, starting on the first week
     # after deltaT
-    for i in range(deltaT, len(weeks_list_accessed)):
+    for i in range(max(deltaT, policy), len(weeks_list_accessed)):
         # Calculate the intermediate working_set that includes the set of datasets
         # accesed between the week leaving the working set(old_week) and the
         # the current week(new_week)
@@ -232,8 +249,12 @@ def get_freed_recalled_and_ws_sizes(weeks_list_accessed, weeks_list_created, pol
         
         freed_per_week.append(to_free_created.union(to_free_accessed))
         recalled_accessed_per_week.append(to_recall_accessed)
+        #dd
+        #working_set_created_per_week.append(current_working_set_created)
+        #working_set_accessed_per_week.append(current_working_set_accessed)
         
 
+    #return working_set_accessed_per_week, working_set_created_per_week, freed_per_week, recalled_accessed_per_week, working_set_size_created_per_week, working_set_size_accessed_per_week
     return freed_per_week, recalled_accessed_per_week, working_set_size_created_per_week, working_set_size_accessed_per_week
 
 
